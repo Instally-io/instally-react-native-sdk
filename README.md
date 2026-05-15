@@ -1,16 +1,29 @@
 # Instally React Native SDK
 
-Track clicks, installs, and revenue from every link you share. See which links actually drive installs and revenue for your React Native app. Pure JavaScript/TypeScript — no native modules required.
+Track clicks, installs, and revenue from every link you share. See which links actually drive installs and revenue for your React Native app.
+
+![Platform](https://img.shields.io/badge/platform-iOS%20%7C%20Android-black)
+![React Native](https://img.shields.io/badge/react--native-0.72%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-black)
 
 **[Website](https://instally.io)** | **[Documentation](https://docs.instally.io)** | **[Blog](https://instally.io/blog)** | **[Sign Up Free](https://app.instally.io/signup)**
+
+## Features
+
+- Pure JavaScript/TypeScript SDK — no custom native Instally module
+- Per-link install and revenue tracking
+- Privacy-preserving attribution — no IDFA, no ATT prompt, no GAID
+- Webhook integrations with RevenueCat, Superwall, Adapty, Qonversion, and Stripe
+- Real-time dashboard
+- TypeScript types included
 
 ## Installation
 
 ```bash
-npm install instally-react-native @react-native-async-storage/async-storage
+npm install github:Instally-io/instally-react-native-sdk @react-native-async-storage/async-storage
 ```
 
-AsyncStorage is a peer dependency used for persisting attribution state across app launches.
+AsyncStorage is a peer dependency used for persisting attribution state across app launches. In bare React Native apps, run `cd ios && pod install` after installing.
 
 ## Quick Start
 
@@ -101,14 +114,37 @@ Links an external user ID to the attribution.
 
 `string | null` -- the attribution ID, or null if not attributed.
 
-## How It Works
+## FAQ
 
-The SDK collects non-identifying device signals (screen size, timezone, language, OS version) and sends them to the Instally API for probabilistic fingerprint matching against recent link clicks. No IDFA, no ATT prompt, no native modules.
+### Do I need to show an ATT prompt on iOS?
+
+No. The SDK does not request the IDFA, so iOS does not require the ATT prompt.
+
+### Does it work with Expo?
+
+Yes. The SDK has no custom native Instally module. The only peer dependency is `@react-native-async-storage/async-storage`, which works with Expo Go and bare React Native projects.
+
+### Does it work with RevenueCat or Stripe?
+
+Yes. Call `instally.setUserId(...)` with your subscription-platform user ID, then configure the Instally webhook. Purchases are automatically attributed to the link that drove the install. See the [RevenueCat integration guide](https://instally.io/blog/revenuecat-instally-integration).
+
+### What's the bundle impact?
+
+Small — pure JS/TS, with AsyncStorage as the only peer dependency. No additional permissions added to the host app.
+
+### Where can I see my data?
+
+Real-time dashboard at [app.instally.io](https://app.instally.io) — clicks, installs, revenue, per-link breakdown.
 
 ## Requirements
 
 - React Native 0.72+
 - iOS 15+ / Android 5.0+
+
+## Learn More
+
+- [Instally vs AppsFlyer vs Branch](https://instally.io/blog/instally-vs-appsflyer-vs-branch) — competitor comparison
+- [Track App Installs From YouTube, TikTok, and Instagram](https://instally.io/blog/track-app-installs-youtube-tiktok-instagram) — channel tracking guide
 
 ## Resources
 
