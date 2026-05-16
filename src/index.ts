@@ -1,11 +1,5 @@
-// Instally React Native SDK
-// Track clicks, installs, and revenue from every link.
-// https://instally.io
-
 import { Platform, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// --- Types ---
 
 export interface AttributionResult {
   matched: boolean;
@@ -28,15 +22,11 @@ export interface TrackPurchaseOptions {
   transactionId?: string;
 }
 
-// --- Storage keys ---
-
 const STORAGE_KEYS = {
   TRACKED: 'instally_install_tracked',
   MATCHED: 'instally_matched',
   ATTRIBUTION_ID: 'instally_attribution_id',
 } as const;
-
-// --- SDK ---
 
 class Instally {
   private _appId: string | null = null;
@@ -65,7 +55,6 @@ class Instally {
     if (opts.apiBase) this._apiBase = opts.apiBase;
     this._configured = true;
 
-    // Load cached state in background
     this.loadCachedState();
   }
 
@@ -83,7 +72,6 @@ class Instally {
       return { matched: false, attributionId: null, confidence: 0, method: 'error', clickId: null };
     }
 
-    // Check if already tracked
     const tracked = await AsyncStorage.getItem(STORAGE_KEYS.TRACKED);
     if (tracked === 'true') {
       const cached: AttributionResult = {
@@ -122,14 +110,12 @@ class Instally {
         clickId: json.click_id ?? null,
       };
 
-      // Persist
       await AsyncStorage.setItem(STORAGE_KEYS.TRACKED, 'true');
       await AsyncStorage.setItem(STORAGE_KEYS.MATCHED, result.matched ? 'true' : 'false');
       if (result.attributionId) {
         await AsyncStorage.setItem(STORAGE_KEYS.ATTRIBUTION_ID, result.attributionId);
       }
 
-      // Update in-memory state
       this._isAttributed = result.matched;
       this._attributionId = result.attributionId;
 
@@ -140,7 +126,6 @@ class Instally {
       return result;
     } catch (error) {
       console.warn('[Instally] Attribution error:', error);
-      // Don't mark as tracked so it retries next launch
       return { matched: false, attributionId: null, confidence: 0, method: 'error', clickId: null };
     }
   }
@@ -224,8 +209,7 @@ class Instally {
   }
 
   /**
-   * Clear cached install attribution state for local QA.
-   * Do not call this in production app flows.
+   * Clear cached install attribution state for development testing.
    *
    * ```ts
    * if (__DEV__) await instally.resetForTesting();
@@ -258,8 +242,6 @@ class Instally {
     return this._attributionId;
   }
 
-  // --- Private helpers ---
-
   private async loadCachedState(): Promise<void> {
     if (this._loaded) return;
     try {
@@ -271,13 +253,12 @@ class Instally {
       this._attributionId = attrId;
       this._loaded = true;
     } catch {
-      // Ignore — values will be populated after trackInstall()
+      // Values will be populated after trackInstall().
     }
   }
 
   private getDeviceModel(): string {
     if (Platform.OS === 'ios') {
-      // On iOS, Platform.constants provides the model
       return (Platform as any).constants?.systemName
         ? `${(Platform as any).constants.systemName}`
         : 'iPhone';
@@ -304,7 +285,6 @@ class Instally {
         const settings = (Platform as any).constants?.localeIdentifier;
         if (settings) return settings;
       }
-      // Fallback to Intl
       return Intl.DateTimeFormat().resolvedOptions().locale ?? 'unknown';
     } catch {
       return 'unknown';

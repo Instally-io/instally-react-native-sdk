@@ -63,8 +63,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-// --- 1. configure() sets credentials ---
-
 describe('configure()', () => {
   it('sets app credentials so subsequent calls work', () => {
     const { instally } = createFreshModule();
@@ -92,8 +90,6 @@ describe('configure()', () => {
   });
 });
 
-// --- 2. trackInstall() without configure() returns error ---
-
 describe('trackInstall() without configure()', () => {
   it('returns error result and warns', async () => {
     const { instally } = createFreshModule();
@@ -111,8 +107,6 @@ describe('trackInstall() without configure()', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-
-// --- 3. trackInstall() sends correct payload ---
 
 describe('trackInstall() sends correct payload', () => {
   it('includes all device info fields', async () => {
@@ -145,8 +139,6 @@ describe('trackInstall() sends correct payload', () => {
   });
 });
 
-// --- 4. trackInstall() returns cached result on second call ---
-
 describe('trackInstall() caching', () => {
   it('returns cached result on second call without making another request', async () => {
     const { instally } = createFreshModule();
@@ -167,8 +159,6 @@ describe('trackInstall() caching', () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
-
-// --- 4b. resetForTesting() clears cached install state ---
 
 describe('resetForTesting()', () => {
   it('clears cached attribution state so trackInstall can run again', async () => {
@@ -199,8 +189,6 @@ describe('resetForTesting()', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });
-
-// --- 5. trackInstall() network failure ---
 
 describe('trackInstall() network failure', () => {
   it('returns error and does not mark as tracked', async () => {
@@ -254,8 +242,6 @@ describe('trackInstall() network failure', () => {
   });
 });
 
-// --- 6. trackPurchase() without configure() ---
-
 describe('trackPurchase() without configure()', () => {
   it('warns and returns without making a request', async () => {
     const { instally } = createFreshModule();
@@ -269,8 +255,6 @@ describe('trackPurchase() without configure()', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-
-// --- 7. trackPurchase() without attribution ID ---
 
 describe('trackPurchase() without attribution ID', () => {
   it('warns and returns without making a request', async () => {
@@ -288,8 +272,6 @@ describe('trackPurchase() without attribution ID', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-
-// --- 8. trackPurchase() sends correct payload ---
 
 describe('trackPurchase() sends correct payload', () => {
   it('sends purchase data with all fields', async () => {
@@ -357,8 +339,6 @@ describe('trackPurchase() sends correct payload', () => {
   });
 });
 
-// --- 9. setUserId() without configure() ---
-
 describe('setUserId() without configure()', () => {
   it('warns and returns without making a request', async () => {
     const { instally } = createFreshModule();
@@ -369,8 +349,6 @@ describe('setUserId() without configure()', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-
-// --- 10. setUserId() without attribution ID ---
 
 describe('setUserId() without attribution ID', () => {
   it('warns and returns without making a request', async () => {
@@ -384,8 +362,6 @@ describe('setUserId() without attribution ID', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });
-
-// --- 11. setUserId() sends correct payload ---
 
 describe('setUserId() sends correct payload', () => {
   it('sends user ID with attribution data', async () => {
@@ -408,8 +384,6 @@ describe('setUserId() sends correct payload', () => {
     expect(body.sdk_version).toBe(TEST_SDK_VERSION);
   });
 });
-
-// --- 12. HTTP headers ---
 
 describe('HTTP request headers', () => {
   it('includes correct headers on all requests', async () => {
@@ -445,8 +419,6 @@ describe('HTTP request headers', () => {
     }
   });
 });
-
-// --- 13. isAttributed and attributionId getters ---
 
 describe('isAttributed and attributionId getters', () => {
   it('return false/null before trackInstall', () => {

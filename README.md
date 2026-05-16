@@ -6,15 +6,14 @@ Track clicks, installs, and revenue from every link you share. See which links a
 ![React Native](https://img.shields.io/badge/react--native-0.72%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-black)
 
-**[Website](https://instally.io)** | **[Documentation](https://docs.instally.io)** | **[Blog](https://instally.io/blog)** | **[Sign Up Free](https://app.instally.io/signup)**
+**[Website](https://instally.io)** | **[Documentation](https://docs.instally.io)** | **[Dashboard](https://app.instally.io)**
 
 ## Features
 
-- Pure JavaScript/TypeScript SDK — no custom native Instally module
+- TypeScript SDK with no custom native Instally module
 - Per-link install and revenue tracking
-- Privacy-preserving attribution — no IDFA, no ATT prompt, no GAID
+- No IDFA, ATT prompt, or GAID
 - Webhook integrations with RevenueCat, Superwall, Adapty, Qonversion, and Stripe
-- Real-time dashboard
 - TypeScript types included
 
 ## Installation
@@ -30,10 +29,8 @@ AsyncStorage is a peer dependency used for persisting attribution state across a
 ```tsx
 import { instally } from 'instally-react-native';
 
-// 1. Configure once on app startup
 instally.configure({ appId: 'APP_ID_HERE', apiKey: 'API_KEY_HERE' });
 
-// 2. Track install (safe to call every launch -- only runs once)
 const result = await instally.trackInstall();
 console.log('Attributed:', result.matched);
 ```
@@ -72,15 +69,17 @@ instally.attributionId; // string | null
 
 ## Testing Attribution
 
-Development builds are supported. For the cleanest test, use one fresh click on
-the same physical device you open the app on, then launch the app within a few
-minutes. Avoid clicking the same tracking link repeatedly before opening the app:
-multiple recent unmatched clicks from the same device/network can be treated as
-ambiguous and return `matched=false`.
+Development builds are supported. For the cleanest test, click the tracking link
+once on the same physical device you open the app on, then launch the app within
+a few minutes.
 
-`trackInstall()` is cached per app install, including a `matched=false` result.
-When testing again on the same dev build, either uninstall/reinstall the app or
-clear the SDK cache in development only:
+Avoid repeated clicks before opening the app. Multiple recent unmatched clicks
+from the same device or network can be treated as ambiguous and return
+`matched=false`.
+
+`trackInstall()` is cached per app install, including `matched=false` results.
+When retrying on the same dev build, uninstall/reinstall the app or clear the SDK
+cache in development:
 
 ```tsx
 if (__DEV__) {
@@ -126,8 +125,8 @@ Links an external user ID to the attribution.
 
 ### `instally.resetForTesting()`
 
-Clears cached install attribution state from AsyncStorage. Use only in local QA
-flows, never in production user journeys.
+Clears cached install attribution state from AsyncStorage. Use this in
+development test flows only.
 
 ### `instally.isAttributed`
 
@@ -149,7 +148,9 @@ Yes. The SDK has no custom native Instally module. The only peer dependency is `
 
 ### Does it work with RevenueCat or Stripe?
 
-Yes. Call `instally.setUserId(...)` with your subscription-platform user ID, then configure the Instally webhook. Purchases are automatically attributed to the link that drove the install. See the [RevenueCat integration guide](https://instally.io/blog/revenuecat-instally-integration).
+Yes. Call `instally.setUserId(...)` with your subscription-platform user ID,
+then configure the Instally webhook. Revenue events are matched back to the link
+that drove the install.
 
 ### What's the bundle impact?
 
@@ -166,16 +167,16 @@ Real-time dashboard at [app.instally.io](https://app.instally.io) — clicks, in
 
 ## Learn More
 
-- [Instally vs AppsFlyer vs Branch](https://instally.io/blog/instally-vs-appsflyer-vs-branch) — competitor comparison
-- [Track App Installs From YouTube, TikTok, and Instagram](https://instally.io/blog/track-app-installs-youtube-tiktok-instagram) — channel tracking guide
+- [Instally vs AppsFlyer vs Branch](https://instally.io/blog/instally-vs-appsflyer-vs-branch)
+- [Track App Installs From YouTube, TikTok, and Instagram](https://instally.io/blog/track-app-installs-youtube-tiktok-instagram)
 
 ## Resources
 
-- [Instally Website](https://instally.io) — Track clicks, installs, and revenue from every link
-- [Dashboard](https://app.instally.io) — Real-time analytics for your app installs
-- [Documentation](https://docs.instally.io) — Full SDK docs and API reference
-- [Pricing](https://instally.io/pricing) — Free tier available, no credit card required
-- [Blog](https://instally.io/blog) — Guides on install tracking, IDFA, and more
+- [Instally Website](https://instally.io)
+- [Dashboard](https://app.instally.io)
+- [Documentation](https://docs.instally.io)
+- [Pricing](https://instally.io/pricing)
+- [Blog](https://instally.io/blog)
 
 ### Other SDKs
 
