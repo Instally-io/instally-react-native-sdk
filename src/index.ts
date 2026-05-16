@@ -47,7 +47,7 @@ class Instally {
   private _attributionId: string | null = null;
   private _loaded = false;
 
-  private static readonly SDK_VERSION = '1.0.0';
+  private static readonly SDK_VERSION = '1.0.1';
 
   /**
    * Configure Instally with your app credentials.
@@ -221,6 +221,25 @@ class Instally {
     } catch (error) {
       console.warn('[Instally] setUserId error:', error);
     }
+  }
+
+  /**
+   * Clear cached install attribution state for local QA.
+   * Do not call this in production app flows.
+   *
+   * ```ts
+   * if (__DEV__) await instally.resetForTesting();
+   * ```
+   */
+  async resetForTesting(): Promise<void> {
+    await Promise.all([
+      AsyncStorage.removeItem(STORAGE_KEYS.TRACKED),
+      AsyncStorage.removeItem(STORAGE_KEYS.MATCHED),
+      AsyncStorage.removeItem(STORAGE_KEYS.ATTRIBUTION_ID),
+    ]);
+    this._isAttributed = false;
+    this._attributionId = null;
+    this._loaded = false;
   }
 
   /**

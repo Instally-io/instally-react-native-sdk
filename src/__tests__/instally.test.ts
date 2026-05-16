@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEST_APP_ID = 'app_test123';
 const TEST_API_KEY = 'key_test456';
+const TEST_SDK_VERSION = '1.0.1';
 
 const mockAttributionResponse = {
   matched: true,
@@ -131,7 +132,7 @@ describe('trackInstall() sends correct payload', () => {
     expect(body.os_version).toBe('17.0');
     expect(body.screen_width).toBe(390);
     expect(body.screen_height).toBe(844);
-    expect(body.sdk_version).toBe('1.0.0');
+    expect(body.sdk_version).toBe(TEST_SDK_VERSION);
     expect(body).toHaveProperty('device_model');
     expect(body).toHaveProperty('timezone');
     expect(body).toHaveProperty('language');
@@ -164,6 +165,38 @@ describe('trackInstall() caching', () => {
     expect(second.attributionId).toBe('attr_abc123');
     // No additional fetch call
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+// --- 4b. resetForTesting() clears cached install state ---
+
+describe('resetForTesting()', () => {
+  it('clears cached attribution state so trackInstall can run again', async () => {
+    const { instally } = createFreshModule();
+    instally.configure({ appId: TEST_APP_ID, apiKey: TEST_API_KEY });
+    mockFetchSuccess({
+      matched: false,
+      attribution_id: null,
+      confidence: 0,
+      method: 'no_match',
+      click_id: null,
+    });
+
+    const first = await instally.trackInstall();
+    expect(first.matched).toBe(false);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    const cached = await instally.trackInstall();
+    expect(cached.method).toBe('cached');
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+
+    await instally.resetForTesting();
+
+    mockFetchSuccess();
+    const retried = await instally.trackInstall();
+    expect(retried.matched).toBe(true);
+    expect(retried.attributionId).toBe('attr_abc123');
+    expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -287,7 +320,7 @@ describe('trackPurchase() sends correct payload', () => {
     expect(body.revenue).toBe(9.99);
     expect(body.currency).toBe('EUR');
     expect(body.transaction_id).toBe('txn_abc');
-    expect(body.sdk_version).toBe('1.0.0');
+    expect(body.sdk_version).toBe(TEST_SDK_VERSION);
     expect(body).toHaveProperty('timestamp');
   });
 
@@ -372,7 +405,7 @@ describe('setUserId() sends correct payload', () => {
     expect(body.app_id).toBe(TEST_APP_ID);
     expect(body.attribution_id).toBe('attr_abc123');
     expect(body.user_id).toBe('rc_user_abc');
-    expect(body.sdk_version).toBe('1.0.0');
+    expect(body.sdk_version).toBe(TEST_SDK_VERSION);
   });
 });
 

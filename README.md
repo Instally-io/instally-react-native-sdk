@@ -70,6 +70,24 @@ instally.isAttributed;  // boolean
 instally.attributionId; // string | null
 ```
 
+## Testing Attribution
+
+Development builds are supported. For the cleanest test, use one fresh click on
+the same physical device you open the app on, then launch the app within a few
+minutes. Avoid clicking the same tracking link repeatedly before opening the app:
+multiple recent unmatched clicks from the same device/network can be treated as
+ambiguous and return `matched=false`.
+
+`trackInstall()` is cached per app install, including a `matched=false` result.
+When testing again on the same dev build, either uninstall/reinstall the app or
+clear the SDK cache in development only:
+
+```tsx
+if (__DEV__) {
+  await instally.resetForTesting();
+}
+```
+
 ## API Reference
 
 ### `instally.configure(opts)`
@@ -105,6 +123,11 @@ interface AttributionResult {
 ### `instally.setUserId(userId: string)`
 
 Links an external user ID to the attribution.
+
+### `instally.resetForTesting()`
+
+Clears cached install attribution state from AsyncStorage. Use only in local QA
+flows, never in production user journeys.
 
 ### `instally.isAttributed`
 
