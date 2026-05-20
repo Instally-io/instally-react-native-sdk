@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEST_APP_ID = 'app_test123';
 const TEST_API_KEY = 'key_test456';
-const TEST_SDK_VERSION = '1.0.1';
+const TEST_SDK_VERSION = '1.0.2';
 
 const mockAttributionResponse = {
   matched: true,
@@ -127,7 +127,7 @@ describe('trackInstall() sends correct payload', () => {
     expect(body.screen_width).toBe(390);
     expect(body.screen_height).toBe(844);
     expect(body.sdk_version).toBe(TEST_SDK_VERSION);
-    expect(body).toHaveProperty('device_model');
+    expect(body.device_model).toBe('iPhone');
     expect(body).toHaveProperty('timezone');
     expect(body).toHaveProperty('language');
 

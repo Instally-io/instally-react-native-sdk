@@ -1,8 +1,10 @@
 export const Platform = {
   OS: 'ios' as string,
   Version: '17.0',
+  isPad: false,
   constants: {
     systemName: 'iOS',
+    interfaceIdiom: 'phone',
   },
 };
 

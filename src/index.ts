@@ -37,7 +37,7 @@ class Instally {
   private _attributionId: string | null = null;
   private _loaded = false;
 
-  private static readonly SDK_VERSION = '1.0.1';
+  private static readonly SDK_VERSION = '1.0.2';
 
   /**
    * Configure Instally with your app credentials.
@@ -259,9 +259,10 @@ class Instally {
 
   private getDeviceModel(): string {
     if (Platform.OS === 'ios') {
-      return (Platform as any).constants?.systemName
-        ? `${(Platform as any).constants.systemName}`
-        : 'iPhone';
+      const constants = (Platform as any).constants;
+      if ((Platform as any).isPad || constants?.interfaceIdiom === 'pad') return 'iPad';
+      if (constants?.interfaceIdiom === 'phone') return 'iPhone';
+      return 'iPhone';
     }
     if (Platform.OS === 'android') {
       const constants = (Platform as any).constants;
