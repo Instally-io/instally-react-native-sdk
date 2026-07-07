@@ -1,4 +1,4 @@
-import { Platform, Dimensions } from 'react-native';
+import { Platform, Dimensions, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface AttributionResult {
@@ -22,6 +22,15 @@ export interface TrackPurchaseOptions {
   transactionId?: string;
 }
 
+interface NativeInstallReferrerResult {
+  installReferrer?: string | null;
+  responseCode?: number;
+}
+
+interface NativeInstallReferrerModule {
+  getInstallReferrer: () => Promise<NativeInstallReferrerResult>;
+}
+
 const STORAGE_KEYS = {
   TRACKED: 'instally_install_tracked',
   MATCHED: 'instally_matched',
@@ -37,7 +46,7 @@ class Instally {
   private _attributionId: string | null = null;
   private _loaded = false;
 
-  private static readonly SDK_VERSION = '1.0.2';
+  private static readonly SDK_VERSION = '1.0.3';
 
   /**
    * Configure Instally with your app credentials.
@@ -92,13 +101,15 @@ class Instally {
       app_id: this._appId,
       platform: Platform.OS,
       device_model: this.getDeviceModel(),
-      os_version: Platform.Version?.toString() ?? 'unknown',
+      os_version: this.getOsVersion(),
       screen_width: Math.round(width),
       screen_height: Math.round(height),
       timezone: this.getTimezone(),
       language: this.getLanguage(),
       sdk_version: Instally.SDK_VERSION,
     };
+
+    Object.assign(payload, await this.getAndroidInstallReferrerPayload());
 
     try {
       const json = await this.post('/v1/attribution', payload);
@@ -272,6 +283,16 @@ class Instally {
     return 'unknown';
   }
 
+  private getOsVersion(): string {
+    if (Platform.OS === 'android') {
+      // Platform.Version on Android is the API level (e.g. 34); the matcher
+      // compares against the human release version (e.g. "14").
+      const release = (Platform as any).constants?.Release;
+      if (release) return String(release);
+    }
+    return Platform.Version?.toString() ?? 'unknown';
+  }
+
   private getTimezone(): string {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -284,11 +305,73 @@ class Instally {
     try {
       if (Platform.OS === 'ios') {
         const settings = (Platform as any).constants?.localeIdentifier;
-        if (settings) return settings;
+        // iOS locale identifiers use underscores ("en_US"); normalize to
+        // BCP-47 so server-side language matching works.
+        if (settings) return String(settings).replace(/_/g, '-');
       }
       return Intl.DateTimeFormat().resolvedOptions().locale ?? 'unknown';
     } catch {
       return 'unknown';
+    }
+  }
+
+  private async getAndroidInstallReferrerPayload(): Promise<Record<string, unknown>> {
+    if (Platform.OS !== 'android') return {};
+
+    const module = (NativeModules as Record<string, unknown> | undefined)
+      ?.InstallyInstallReferrer as NativeInstallReferrerModule | undefined;
+
+    if (!module || typeof module.getInstallReferrer !== 'function') {
+      return {};
+    }
+
+    try {
+      const result = await module.getInstallReferrer();
+      const referrer = typeof result?.installReferrer === 'string' ? result.installReferrer : '';
+      if (!referrer) return {};
+
+      const clickId =
+        this.parseReferrerParam(referrer, 'in_click_id') ??
+        this.parseReferrerParam(referrer, 'instally_click_id');
+
+      return {
+        install_referrer: referrer,
+        referrer,
+        ...(clickId ? { in_click_id: clickId } : {}),
+      };
+    } catch (error) {
+      console.warn('[Instally] Android install referrer unavailable:', error);
+      return {};
+    }
+  }
+
+  private parseReferrerParam(referrer: string, key: string): string | null {
+    const direct = this.parseReferrerPairs(referrer, key);
+    if (direct) return direct;
+
+    const decoded = this.decodeReferrerValue(referrer);
+    if (decoded !== referrer) {
+      return this.parseReferrerPairs(decoded, key);
+    }
+
+    return null;
+  }
+
+  private parseReferrerPairs(referrer: string, key: string): string | null {
+    for (const pair of referrer.split('&')) {
+      const [rawKey, rawValue = ''] = pair.split('=', 2);
+      if (this.decodeReferrerValue(rawKey) === key) {
+        return this.decodeReferrerValue(rawValue);
+      }
+    }
+    return null;
+  }
+
+  private decodeReferrerValue(value: string): string {
+    try {
+      return decodeURIComponent(value.replace(/\+/g, ' '));
+    } catch {
+      return value;
     }
   }
 

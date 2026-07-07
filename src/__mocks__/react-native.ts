@@ -11,3 +11,5 @@ export const Platform = {
 export const Dimensions = {
   get: (_dim: string) => ({ width: 390, height: 844 }),
 };
+
+export const NativeModules: Record<string, any> = {};

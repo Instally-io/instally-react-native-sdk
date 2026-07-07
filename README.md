@@ -10,8 +10,9 @@ Track clicks, installs, and revenue from every link you share. See which links a
 
 ## Features
 
-- TypeScript SDK with no custom native Instally module
+- TypeScript API with a small native Android module for Play Install Referrer
 - Per-link install and revenue tracking
+- Android Play Install Referrer support for deterministic Google Play matches
 - No IDFA, ATT prompt, or GAID
 - Webhook integrations with RevenueCat, Superwall, Adapty, Qonversion, and Stripe
 - TypeScript types included
@@ -69,9 +70,15 @@ instally.attributionId; // string | null
 
 ## Testing Attribution
 
-Development builds are supported. For the cleanest test, click the tracking link
-once on the same physical device you open the app on, then launch the app within
-a few minutes.
+Development builds are supported. On Android, deterministic matching requires
+the app to be installed through a Google Play path that supplies the Play Install
+Referrer, such as internal testing or internal app sharing. Direct APK/ADB
+installs can still call `trackInstall()`, but they may return `matched=false`
+because Google Play did not pass a referrer to the app.
+
+For the cleanest test, click the tracking link once on the same physical device
+you open the app on, install through Play, then launch the app within a few
+minutes.
 
 Avoid repeated clicks before opening the app. Multiple recent unmatched clicks
 from the same device or network can be treated as ambiguous and return
@@ -144,7 +151,10 @@ No. The SDK does not request the IDFA, so iOS does not require the ATT prompt.
 
 ### Does it work with Expo?
 
-Yes. The SDK has no custom native Instally module. The only peer dependency is `@react-native-async-storage/async-storage`, which works with Expo Go and bare React Native projects.
+Yes with Expo development builds and production builds. Expo Go cannot include
+the native Android Install Referrer module, so Android deterministic matching
+should be tested with an Expo dev build installed through a Google Play testing
+path.
 
 ### Does it work with RevenueCat or Stripe?
 
@@ -154,7 +164,9 @@ that drove the install.
 
 ### What's the bundle impact?
 
-Small — pure JS/TS, with AsyncStorage as the only peer dependency. No additional permissions added to the host app.
+Small — TypeScript plus a minimal Android native module for Play Install
+Referrer. AsyncStorage is the only JavaScript peer dependency, and no
+advertising ID permissions are added to the host app.
 
 ### Where can I see my data?
 

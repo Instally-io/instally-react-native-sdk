@@ -1,11 +1,13 @@
 {
   "name": "instally-react-native",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Track clicks, installs, and revenue from every link in your React Native app",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
+    "android",
     "dist",
+    "react-native.config.js",
     "README.md",
     "LICENSE"
   ],

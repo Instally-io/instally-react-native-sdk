@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEST_APP_ID = 'app_test123';
 const TEST_API_KEY = 'key_test456';
-const TEST_SDK_VERSION = '1.0.2';
+const TEST_SDK_VERSION = '1.0.3';
 
 const mockAttributionResponse = {
   matched: true,
@@ -18,6 +18,28 @@ const mockAttributionResponse = {
 function createFreshModule() {
   let mod: typeof import('../index');
   jest.isolateModules(() => {
+    mod = require('../index');
+  });
+  return mod!;
+}
+
+function createFreshAndroidModule(referrer?: string) {
+  let mod: typeof import('../index');
+  jest.isolateModules(() => {
+    const reactNative = require('react-native');
+    reactNative.Platform.OS = 'android';
+    reactNative.Platform.Version = '14';
+    reactNative.Platform.constants = { Model: 'Pixel 8' };
+    if (referrer) {
+      reactNative.NativeModules.InstallyInstallReferrer = {
+        getInstallReferrer: jest.fn().mockResolvedValue({
+          installReferrer: referrer,
+          responseCode: 0,
+        }),
+      };
+    } else {
+      delete reactNative.NativeModules.InstallyInstallReferrer;
+    }
     mod = require('../index');
   });
   return mod!;
@@ -136,6 +158,72 @@ describe('trackInstall() sends correct payload', () => {
     expect(result.confidence).toBe(0.95);
     expect(result.method).toBe('fingerprint');
     expect(result.clickId).toBe('click_xyz');
+  });
+
+  it('includes Android Play Install Referrer fields when available', async () => {
+    const { instally } = createFreshAndroidModule(
+      'utm_source=instally&in_click_id=click_android_123&in_link_id=abc123'
+    );
+    instally.configure({ appId: TEST_APP_ID, apiKey: TEST_API_KEY });
+    mockFetchSuccess({
+      matched: true,
+      attribution_id: 'attr_android123',
+      confidence: 1,
+      method: 'referrer',
+      click_id: 'click_android_123',
+    });
+
+    const result = await instally.trackInstall();
+
+    const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(body.platform).toBe('android');
+    expect(body.device_model).toBe('Pixel 8');
+    expect(body.install_referrer).toBe(
+      'utm_source=instally&in_click_id=click_android_123&in_link_id=abc123'
+    );
+    expect(body.referrer).toBe(
+      'utm_source=instally&in_click_id=click_android_123&in_link_id=abc123'
+    );
+    expect(body.in_click_id).toBe('click_android_123');
+    expect(result.method).toBe('referrer');
+    expect(result.confidence).toBe(1);
+  });
+
+  it('extracts Android click IDs from encoded Play referrers', async () => {
+    const encodedReferrer = encodeURIComponent(
+      'utm_source=instally&in_click_id=click_encoded_456&in_link_id=abc123'
+    );
+    const { instally } = createFreshAndroidModule(encodedReferrer);
+    instally.configure({ appId: TEST_APP_ID, apiKey: TEST_API_KEY });
+    mockFetchSuccess();
+
+    await instally.trackInstall();
+
+    const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(body.install_referrer).toBe(encodedReferrer);
+    expect(body.in_click_id).toBe('click_encoded_456');
+  });
+
+  it('does not block Android attribution when native referrer module is unavailable', async () => {
+    const { instally } = createFreshAndroidModule();
+    instally.configure({ appId: TEST_APP_ID, apiKey: TEST_API_KEY });
+    mockFetchSuccess({
+      matched: false,
+      attribution_id: null,
+      confidence: 0,
+      method: 'no_match',
+      click_id: null,
+    });
+
+    await instally.trackInstall();
+
+    const [, options] = (global.fetch as jest.Mock).mock.calls[0];
+    const body = JSON.parse(options.body);
+    expect(body.platform).toBe('android');
+    expect(body).not.toHaveProperty('install_referrer');
+    expect(body).not.toHaveProperty('in_click_id');
   });
 });
 
